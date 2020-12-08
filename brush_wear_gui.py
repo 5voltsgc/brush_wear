@@ -3,11 +3,13 @@ import tkinter as tk
 from tkinter import ttk
 import serial
 
+# Global Varibles
+Number_samples = 3
+comm_port = "COM27"  # this is the comm port the scale is connected to
+
 # Serial Port - Change port to match serial port on computer device manager
-serialPort = serial.Serial(port="COM26", baudrate=9600,
+serialPort = serial.Serial(port=comm_port, baudrate=9600,
                            bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
-
-
 
 
 # Main Window
@@ -21,6 +23,48 @@ separator1 = ttk.Separator(window, orient='vertical')
 separator1.place(relx=0.33, rely=0, relwidth=0.2, relheight=1)
 separator2 = ttk.Separator(window, orient='vertical')
 separator2.place(relx=0.66, rely=0, relwidth=0.2, relheight=1)
+
+
+def Weight_read():
+
+    serialString = ""  # Used to hold data coming over UART
+    try:
+        serialString = serialPort.readline()
+        serialString = serialString.decode('Ascii').strip('+').strip()
+        serialString = serialString[:-1]
+
+        return(float(serialString))
+
+    except ValueError:
+
+        # just return 0 Zero if cant be converted to float, and try again
+        return(0)
+
+
+def sample_weight():
+    average_weight = []
+
+    for x in range(Number_samples):
+        read = Weight_read()
+        average_weight.append(read)
+
+    current_weight = Weight_read()
+    max_weight = max(average_weight)
+    min_weight = min(average_weight)
+
+    loop_count = 0
+    while max_weight != min_weight:
+        average_weight.pop(0)
+        current_weight = Weight_read()
+        average_weight.append(current_weight)
+        max_weight = max(average_weight)
+        min_weight = min(average_weight)
+        loop_count += 1
+
+        if loop_count > 25:
+            print("check scale!  can't get a stable reading")
+
+    return(current_weight)
 
 
 # Label objects
@@ -70,36 +114,6 @@ Brushes = (
     ['110733-29',  4.28, .010])
 
 
-def Sample_weight():
-    good_reading = False
-    running_weight =[]
-
-    while(good_reading == False):
-         # Wait until there is data waiting in the serial buffer
-         if(serialPort.in_waiting > 0):
-
-            # Read data out of the buffer until a carraige Rtn or N/line
-            serialString = serialPort.readline()
-            serialString = serialString.decode('Ascii')
-            serialString = serialString.strip('+')
-            serialString = serialString.strip()
-            serialString = serialString[:-1]
-            floatWeight = float(serialString)
-
-            # Read 3 weight samples and dotre in runing_weight list
-            running_weight.append(floatWeight)
-            if running_weight.len >=3:
-                weight_average = sum(running_weight)/3
-                
-
-
-
-
-            
-
-
-
-
 # Blue Combobox creation
 Blue_combo = ttk.Combobox(window)
 Blue_combo['values'] = Brushes
@@ -144,7 +158,13 @@ RedButton.grid(column=7, row=50)
 def Green_clicked():
     Green_Brush = Green_combo.get()
     print(type(Green_Brush))
-    GreenButton.config( text='Recorded', relief='sunken', command='') # TODO add command if desired to change
+
+    GreenButton.config(text='Recorded', relief='sunken', command='')
+    # TODO add command if desired to change
+    Green = sample_weight()
+    G_Previous = Green
+
+    print(Green)
 
 
 GreenButton = tk.Button(window, text='Record', command=Green_clicked)
