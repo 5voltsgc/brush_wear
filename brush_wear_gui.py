@@ -5,7 +5,11 @@ import serial
 
 # Global Varibles
 Number_samples = 3
-comm_port = "COM27"  # this is the comm port the scale is connected to
+red_first_time = True
+blue_first_time = True
+green_first_time = True
+
+comm_port = "COM29"  # this is the comm port the scale is connected to
 
 # Serial Port - Change port to match serial port on computer device manager
 serialPort = serial.Serial(port=comm_port, baudrate=9600,
@@ -67,6 +71,12 @@ def sample_weight():
     return(current_weight)
 
 
+def find_num_fibers(fiber_diameter):
+    # TODO
+    num_fibers = fiber_diameter * 500
+    return(num_fibers)
+
+
 # Label objects
 Blue_lbl = ttk.Label(window, text="Blue Brushes",
                      background="blue", font=("Helvetica", 16), width=30)
@@ -82,7 +92,7 @@ Green_lbl.grid(column=12, row=4, rowspan=2, columnspan=5)
 
 # Brush tuple Column 0=Item#, 1=Lenth, 2=Fiber Diameter
 Brushes = (
-    ['Not Measured', '', ''],
+    ['Not Measured', 0, 0],
     ['110733-01',  3.00, .010],
     ['110733-02',  3.00, .012],
     ['110733-03',  3.00, .015],
@@ -153,18 +163,34 @@ def Red_clicked():
 RedButton = tk.Button(window, text='Record', command=Red_clicked)
 RedButton.grid(column=7, row=50)
 
-
+# #############################################################################
+#                                   GREEN BUTTON
+# #############################################################################
 # Selected Green Brush
+
+
 def Green_clicked():
-    Green_Brush = Green_combo.get()
-    print(type(Green_Brush))
 
+    brush_info = Green_combo.get()
+    current_weight = sample_weight()
     GreenButton.config(text='Recorded', relief='sunken', command='')
-    # TODO add command if desired to change
-    Green = sample_weight()
-    G_Previous = Green
 
-    print(Green)
+    global green_first_time
+    if green_first_time:
+        green_first_time = False
+        green_fiber_diamter = float(brush_info[-5:])
+        find_num_fibers(green_fiber_diamter)
+        G_start.set(current_weight)
+    else:
+  
+        G_Current.set(G_Current.get())
+
+    # TODO add command if desired to change
+    # Green = sample_weight()
+    # G_Previous = Green
+    # G_Previous = find_num_fibers()
+    # print(G_Previous)
+    # print(Green)
 
 
 GreenButton = tk.Button(window, text='Record', command=Green_clicked)
