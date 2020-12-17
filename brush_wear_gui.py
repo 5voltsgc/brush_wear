@@ -8,12 +8,40 @@ Number_samples = 3
 red_first_time = True
 blue_first_time = True
 green_first_time = True
+green_brush = ['[0] item Number',
+               '[1] Fiber Count',
+               '[2] Fiber Radius',
+               '[3] Start Length',
+               '[4] Start weight',
+               '[5] Current weight',
+               '[6] Diff from Previous weight',
+               '[7] Current Length'
+               ]
+red_brush = ['[0] item Number',
+             '[1] Fiber Count',
+             '[2] Fiber Radius',
+             '[3] Start Length',
+             '[4] Start weight',
+             '[5] Current weight',
+             '[6] Diff from Previous weight',
+             '[7] Current Length'
+             ]
+
+blue_brush = ['[0] item Number',
+              '[1] Fiber Count',
+              '[2] Fiber Radius',
+              '[3] Start Length',
+              '[4] Start weight',
+              '[5] Current weight',
+              '[6] Diff from Previous weight',
+              '[7] Current Length'
+              ]
 
 comm_port = "COM29"  # this is the comm port the scale is connected to
 
 # Serial Port - Change port to match serial port on computer device manager
-serialPort = serial.Serial(port=comm_port, baudrate=9600,
-                           bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
+# serialPort = serial.Serial(port=comm_port, baudrate=9600,
+#                            bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
 
 
 # Main Window
@@ -167,23 +195,44 @@ RedButton.grid(column=7, row=50)
 #                                   GREEN BUTTON
 # #############################################################################
 # Selected Green Brush
+global green_brush
 
 
 def Green_clicked():
+    """
+    This function will be repeated for the other two buttons.
+    Collect information: Scale weight, Brush info, previous weight, and do the
+    calculations. Format this data for the tkinter GUI, and the output file
+    """
+    global green_first_time
+    global green_brush
 
-    brush_info = Green_combo.get()
-    current_weight = sample_weight()
+    # Change button to be sunken, the command can not be run again
     GreenButton.config(text='Recorded', relief='sunken', command='')
 
-    global green_first_time
+    # Get the current weight from the scale
+    current_weight = sample_weight()
+
+    # Find out if this is the first record
     if green_first_time:
         green_first_time = False
-        green_fiber_diamter = float(brush_info[-5:])
-        find_num_fibers(green_fiber_diamter)
-        G_start.set(current_weight)
-    else:
-  
-        G_Current.set(G_Current.get())
+        # read the selected brush then make it grayed out
+        brush_info = Green_combo.get()
+        Green_combo.config(relief='sunken')  # disabled=True
+
+        # TODO regex to parse the brush info into green_brush
+        green_brush[0] = brush_info[:8]
+        green_brush[2] = float(brush_info[-5:])/2
+        green_brush[4] = current_weight
+
+    # if green_first_time:
+    #     green_first_time = False
+    #     green_fiber_diamter = float(brush_info[-5:])
+    #     find_num_fibers(green_fiber_diamter)
+    #     G_start.set(current_weight)
+    # else:
+
+    #     G_Current.set(G_Current.get())
 
     # TODO add command if desired to change
     # Green = sample_weight()
