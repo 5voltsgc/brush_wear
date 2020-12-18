@@ -1,4 +1,4 @@
-# brush_wear
+# brush wear
 reads a serial input from  scale weighing brush samples
 
 With a scale connected to the serial port this program will read the weight
