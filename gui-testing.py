@@ -10,8 +10,8 @@ loop_count = 1
 red_first_time = True
 blue_first_time = True
 green_first_time = True
-red_recorded = False  # TODO this should be False but testing
-blue_recorded = True  # TODO this should be False but testing
+red_recorded = False
+blue_recorded = False
 green_recorded = False
 
 print('Blue Current Weight, Red Current Weight, Green Current Weight')
@@ -132,14 +132,14 @@ def record_complete():
     it compiles all the data and writes to a file
     erases the notes text entry, updates the odometer
     """
-    global Green_Recorded
-    global Blue_Recorded
-    global Red_recoded
+    global green_recorded
+    global blue_recorded
+    global red_recorded
     global loop_count  # TODO Loop_count needs to be distance and add odometer
 
-    Green_Recorded = False
-    Blue_Recorded = False
-    Red_recoded = False
+    red_recorded = False
+    blue_recorded = False
+    green_recorded = False
 
     global blue_first_time
     global red_first_time
@@ -248,9 +248,90 @@ Green_combo.current(3)  # set the selected item
 Green_combo.grid(column=13, row=15)
 
 
-# Selected Blue Brush
+# #############################################################################
+#                                   Blue BUTTON
+# #############################################################################
+
+# Selected Red Brush
 def Blue_clicked():
-    print('Blue Button Clicked')
+    global blue_first_time
+    global blue_brush
+    global blue_recorded
+
+    # # Used for enter the record_complete() function.
+    blue_recorded = True
+
+    # Change button to be sunken.
+    BlueButton.config(text='Recorded', relief='sunken')
+
+    # Get the current weight from the scale
+    current_weight = sample_weight()
+
+    # Find out if this is the first record
+    if blue_first_time:
+
+        # Read the selected brush then make it grayed out
+        brush_info = Blue_combo.get()
+        Blue_combo.config(state="disabled")
+
+        # [0] Item Number is a string 9 character from begining
+        blue_brush[0] = brush_info[:9]
+
+        # [2] Fiber Radius is 5 from end and a diameter
+        blue_brush[2] = float(brush_info[-5:])/2
+
+        # [3] Start length is in the middle of the string
+        blue_brush[3] = float(brush_info[10:14].strip())
+
+        # [1] Define fiber count
+        blue_brush[1] = find_fiber_count(current_weight,
+                                         blue_brush[2],
+                                         blue_brush[3]
+                                         )
+
+        # [4]  Start weight put in entry and list
+        blue_brush[4] = current_weight
+        B_start.set(blue_brush[4])
+
+        # [5]  Current weight
+        blue_brush[5] = current_weight
+        B_Current.set(blue_brush[5])
+
+        # [6] Calculate difference from previous weight.
+        blue_brush[6] = current_weight
+        B_Previous.set(blue_brush[6])
+        # Since this is the first weigh sample set differance to 0.
+        B_diff.set(0.00)
+
+        # [7] Current weight
+        blue_brush[7] = blue_brush[3]
+        B_est_length.set(blue_brush[7])
+
+    else:
+        # TODO remove this line - testing green_brush[7] is set in first_time
+        blue_brush[7] = 30.0
+
+        # Update the previous widget.
+        B_Previous.set(blue_brush[5])
+
+        # [6] Update the difference list and text widget.
+        blue_brush[6] = "{:.4f}".format((blue_brush[7]) - current_weight)
+        B_diff.set(blue_brush[6])
+
+        # [5]  Update current weight widget.
+        blue_brush[5] = current_weight
+        B_Current.set(blue_brush[5])
+
+        # [7] Update the current length widget.
+        blue_brush[7] = "{:.4f}".format(find_height(current_weight,
+                                                    blue_brush[2],
+                                                    blue_brush[1]))
+
+        B_est_length.set(blue_brush[7])
+
+        # Have all colors been recorded
+    if green_recorded and red_recorded and blue_recorded:
+        record_complete()
 
 
 BlueButton = tk.Button(window, text='Record', font=("Helvetica", 12),
@@ -268,7 +349,7 @@ def Red_clicked():
     global red_brush
     global red_recorded
 
-    # Used for enter the record_complete() function.
+    # # Used for enter the record_complete() function.
     red_recorded = True
 
     # Change button to be sunken.
