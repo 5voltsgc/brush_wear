@@ -1,6 +1,8 @@
+
 # Import required modules
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+
 import datetime
 
 # Global Varibles
@@ -10,10 +12,10 @@ red_first_time = True
 blue_first_time = True
 green_first_time = True
 red_recorded = True  # TODO this should be True but testing
-blue_recorded = True  # TODO this should be True but testing
+blue_recorded = False  # TODO this should be True but testing
 green_recorded = False
 
-filename = ("Brush_wear" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") +   
+filename = ("Brush_wear" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") +
             ".csv")
 
 # '[0] item Number',
@@ -66,7 +68,7 @@ separator1.place(relx=0.33, rely=0, relwidth=0.2, relheight=.75)
 separator2 = ttk.Separator(window, orient='vertical')
 separator2.place(relx=0.66, rely=0, relwidth=0.2, relheight=.75)
 separator3 = ttk.Separator(window, orient='horizontal')
-separator3.place(relx=0, rely=.66, relwidth=1, relheight=.75)
+separator3.place(relx=0, rely=.67, relwidth=1, relheight=.75)
 
 
 def find_fiber_count(scale, fiber_radius=0.127, fiber_height=76.2,
@@ -133,7 +135,7 @@ def record_complete():
     global Green_Recorded
     global Blue_Recorded
     global Red_recoded
-    global loop_count
+    global loop_count  # TODO Loop_count needs to be distance and add odometer
 
     Green_Recorded = False
     Blue_Recorded = False
@@ -143,15 +145,15 @@ def record_complete():
     red = ', '.join([str(elem) for elem in red_brush])
     blue = ', '.join([str(elem) for elem in red_brush])
 
-    record_data = (str(datetime.datetime.now()) +
-                   ", " +
-                   str(loop_count) +
-                   ", " +
-                   green +
-                   ", " +
-                   red +
-                   ", " +
-                   blue)
+    record_data = (str(datetime.datetime.now())
+                   + ", "
+                   + str(loop_count)
+                   + ", "
+                   + green
+                   + ", "
+                   + red
+                   + ", "
+                   + blue)
 
     print(record_data)
 
@@ -283,6 +285,7 @@ def Green_clicked():
         # Read the selected brush then make it grayed out
         brush_info = Green_combo.get()
         Green_combo.config(state="disabled")
+
         # [0] Item number
         green_brush[0] = brush_info[:9]
 
@@ -316,14 +319,14 @@ def Green_clicked():
         G_est_length.set(green_brush[7])
 
     else:
-        # TODO remove this line - testing
+        # TODO remove this line - testing green_brush[7] is set in first_time
         green_brush[7] = 30.0
 
         # update the previous entry widget
         G_Previous.set(green_brush[7])
 
         # [6] update the difference list and text widget
-        green_brush[6] = (green_brush[7]) - current_weight
+        green_brush[6] = "{:.4f}".format((green_brush[7]) - current_weight)
         G_diff.set(green_brush[6])
 
         # [5] Current weight
@@ -331,14 +334,14 @@ def Green_clicked():
         G_Current.set(green_brush[5])
 
         # [7] update Current length
-        green_brush[7] = find_height(current_weight)
+        green_brush[7] = "{:.4f}".format(find_height(current_weight))
         G_est_length.set(green_brush[7])
 
     # Have all colors been recorded, if so complete record
 
-    print(green_recorded)  # TODO remove this after testing
-    print(blue_recorded)  # TODO remove this after testing
-    print(red_recorded)  # TODO remove this after testing
+    # print(green_recorded)  # TODO remove this after testing
+    # print(blue_recorded)  # TODO remove this after testing
+    # print(red_recorded)  # TODO remove this after testing
 
     if green_recorded and blue_recorded and red_recorded:
         record_complete()
@@ -447,16 +450,29 @@ Green_Start_lbl = ttk.Label(window,
 Green_Start_lbl.grid(column=12, row=44,)
 
 G_start = tk.StringVar()
-Green_start = ttk.Entry(window, width=15, textvariable=G_start)
+Green_start = ttk.Entry(window,
+                        width=15,
+                        textvariable=G_start,
+                        state='readonly',
+                        font=("Helvetica", 12),
+                        justify='center'
+                        )
 Green_start.grid(column=13, row=44)
 
 Green_Previous_lbl = ttk.Label(window,
                                text="Previous Weight(g)",
-                               font=("Helvetica", 12))
+                               font=("Helvetica", 12)
+                               )
 Green_Previous_lbl.grid(column=12, row=45,)
 
 G_Previous = tk.StringVar()
-Green_Previous = ttk.Entry(window, width=15, textvariable=G_Previous)
+Green_Previous = ttk.Entry(window,
+                           width=15,
+                           textvariable=G_Previous,
+                           state='readonly',
+                           font=("Helvetica", 12),
+                           justify='center'
+                           )
 Green_Previous.grid(column=13, row=45)
 
 Green_Current_lbl = ttk.Label(window,
@@ -465,7 +481,13 @@ Green_Current_lbl = ttk.Label(window,
 Green_Current_lbl.grid(column=12, row=46,)
 
 G_Current = tk.StringVar()
-Green_Current = ttk.Entry(window, width=15, textvariable=G_Current)
+Green_Current = ttk.Entry(window,
+                          width=15,
+                          textvariable=G_Current,
+                          state='readonly',
+                          font=("Helvetica", 12),
+                          justify='center'
+                          )
 Green_Current.grid(column=13, row=46)
 
 Green_Diff_lbl = ttk.Label(window,
@@ -474,7 +496,12 @@ Green_Diff_lbl = ttk.Label(window,
 Green_Diff_lbl.grid(column=12, row=47,)
 
 G_diff = tk.StringVar()
-Green_diff = ttk.Entry(window, width=15, textvariable=G_diff)
+Green_diff = ttk.Entry(window,
+                       width=15,
+                       textvariable=G_diff,
+                       state='readonly',
+                       font=("Helvetica", 12),
+                       justify='center')
 Green_diff.grid(column=13, row=47)
 
 Green_est_length_lbl = ttk.Label(window,
@@ -483,7 +510,12 @@ Green_est_length_lbl = ttk.Label(window,
 Green_est_length_lbl.grid(column=12, row=48,)
 
 G_est_length = tk.StringVar()
-Green_est_length = ttk.Entry(window, width=15, textvariable=G_est_length)
+Green_est_length = ttk.Entry(window,
+                             width=15,
+                             textvariable=G_est_length,
+                             state='readonly',
+                             font=("Helvetica", 12),
+                             justify='center')
 Green_est_length.grid(column=13, row=48)
 
 # The record number label and entry
@@ -526,8 +558,22 @@ notes = tk.StringVar()
 notes = ttk.Entry(window, width=90, textvariable=notes)
 notes.place(relx=.17, rely=.80,)
 
+
+def testing_complete():
+    # ask are you sure
+
+    MsgBox = messagebox.askquestion('Exit Application',
+                                    'Are you sure you want to exit?',
+                                    icon='warning',
+                                    default='no')
+    if MsgBox == 'yes':
+        window.destroy()
+
+
 # Record Record button
-testing_complete = tk.Button(window, text='Testing Complete', command='',
+testing_complete = tk.Button(window,
+                             text='Testing Complete',
+                             command=testing_complete,
                              font=("Helvetica", 8))
 testing_complete.place(relx=.9, rely=.90,)
 
