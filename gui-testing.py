@@ -11,7 +11,7 @@ red_first_time = True
 blue_first_time = True
 green_first_time = True
 red_recorded = False  # TODO this should be False but testing
-blue_recorded = False  # TODO this should be False but testing
+blue_recorded = True  # TODO this should be False but testing
 green_recorded = False
 
 print('Blue Current Weight, Red Current Weight, Green Current Weight')
@@ -140,6 +140,14 @@ def record_complete():
     Green_Recorded = False
     Blue_Recorded = False
     Red_recoded = False
+
+    global blue_first_time
+    global red_first_time
+    global green_first_time
+
+    blue_first_time = False
+    red_first_time = False
+    green_first_time = False
 
     BlueButton.config(text='Record', relief='raised')
     RedButton.config(text='Record', relief='raised')
@@ -271,7 +279,6 @@ def Red_clicked():
 
     # Find out if this is the first record
     if red_first_time:
-        red_first_time = False
 
         # Read the selected brush then make it grayed out
         brush_info = Red_combo.get()
@@ -285,6 +292,12 @@ def Red_clicked():
 
         # [3] Start length is in the middle of the string
         red_brush[3] = float(brush_info[10:14].strip())
+
+        # [1] Define fiber count
+        red_brush[1] = find_fiber_count(current_weight,
+                                        red_brush[2],
+                                        red_brush[3]
+                                        )
 
         # [4]  Start weight put in entry and list
         red_brush[4] = current_weight
@@ -305,8 +318,11 @@ def Red_clicked():
         R_est_length.set(red_brush[7])
 
     else:
+        # TODO remove this line - testing green_brush[7] is set in first_time
+        red_brush[7] = 30.0
+
         # Update the previous widget.
-        R_Previous.set(red_brush[7])
+        R_Previous.set(red_brush[5])
 
         # [6] Update the difference list and text widget.
         red_brush[6] = "{:.4f}".format((red_brush[7]) - current_weight)
@@ -359,7 +375,6 @@ def Green_clicked():
 
     # Find out if this is the first record
     if green_first_time:
-        green_first_time = False
 
         # Read the selected brush then make it grayed out
         brush_info = Green_combo.get()
@@ -400,10 +415,10 @@ def Green_clicked():
 
     else:
         # TODO remove this line - testing green_brush[7] is set in first_time
-        # green_brush[7] = 30.0
+        green_brush[7] = 30.0
 
         # update the previous entry widget
-        G_Previous.set(green_brush[7])
+        G_Previous.set(green_brush[5])
 
         # [6] update the difference list and text widget
         green_brush[6] = "{:.4f}".format((green_brush[7]) - current_weight)
