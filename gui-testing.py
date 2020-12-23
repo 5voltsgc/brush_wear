@@ -2,7 +2,6 @@
 # Import required modules
 import tkinter as tk
 from tkinter import ttk, messagebox
-
 import datetime
 
 # Global Varibles
@@ -11,10 +10,11 @@ loop_count = 1
 red_first_time = True
 blue_first_time = True
 green_first_time = True
-red_recorded = True  # TODO this should be True but testing
-blue_recorded = False  # TODO this should be True but testing
+red_recorded = False  # TODO this should be False but testing
+blue_recorded = False  # TODO this should be False but testing
 green_recorded = False
 
+print('Blue Current Weight, Red Current Weight, Green Current Weight')
 filename = ("Brush_wear" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") +
             ".csv")
 
@@ -140,10 +140,22 @@ def record_complete():
     Green_Recorded = False
     Blue_Recorded = False
     Red_recoded = False
-    print('Completed was executed')
-    green = ', '.join([str(elem) for elem in green_brush])
+
+    BlueButton.config(text='Record', relief='raised')
+    RedButton.config(text='Record', relief='raised')
+    GreenButton.config(text='Record', relief='raised')
+
+    green = ', '.join([str(elem) for elem in blue_brush])
     red = ', '.join([str(elem) for elem in red_brush])
-    blue = ', '.join([str(elem) for elem in red_brush])
+    blue = ', '.join([str(elem) for elem in green_brush])
+
+    # Print to the terminal the current weight for each brush.
+    screen_print = (str(blue_brush[5])
+                    + ', '
+                    + str(red_brush[5])
+                    + ', '
+                    + str(green_brush[5]))
+    print(screen_print)
 
     record_data = (str(datetime.datetime.now())
                    + ", "
@@ -155,15 +167,11 @@ def record_complete():
                    + ", "
                    + blue)
 
-    print(record_data)
-
     with open(filename, 'a') as f:
-
         loop_count += 1
         f.write(record_data)
         f.write('\n')
         f.close
-        print(record_data)
         record_data = ""
 
 
@@ -234,9 +242,7 @@ Green_combo.grid(column=13, row=15)
 
 # Selected Blue Brush
 def Blue_clicked():
-    Blue_Brush = Blue_combo.get()
-    print(Blue_Brush)
-    print(Blue_start.get())
+    print('Blue Button Clicked')
 
 
 BlueButton = tk.Button(window, text='Record', font=("Helvetica", 12),
@@ -244,10 +250,82 @@ BlueButton = tk.Button(window, text='Record', font=("Helvetica", 12),
 BlueButton.grid(column=2, row=50)
 
 
+# #############################################################################
+#                                   RED BUTTON
+# #############################################################################
+
 # Selected Red Brush
 def Red_clicked():
-    Red_Brush = Red_combo.get()  # sting
-    print(Red_Brush)
+    global red_first_time
+    global red_brush
+    global red_recorded
+
+    # Used for enter the record_complete() function.
+    red_recorded = True
+
+    # Change button to be sunken.
+    RedButton.config(text='Recorded', relief='sunken')
+
+    # Get the current weight from the scale
+    current_weight = sample_weight()
+
+    # Find out if this is the first record
+    if red_first_time:
+        red_first_time = False
+
+        # Read the selected brush then make it grayed out
+        brush_info = Red_combo.get()
+        Red_combo.config(state="disabled")
+
+        # [0] Item Number is a string 9 character from begining
+        red_brush[0] = brush_info[:9]
+
+        # [2] Fiber Radius is 5 from end and a diameter
+        red_brush[2] = float(brush_info[-5:])/2
+
+        # [3] Start length is in the middle of the string
+        red_brush[3] = float(brush_info[10:14].strip())
+
+        # [4]  Start weight put in entry and list
+        red_brush[4] = current_weight
+        R_start.set(red_brush[4])
+
+        # [5]  Current weight
+        red_brush[5] = current_weight
+        R_Current.set(red_brush[5])
+
+        # [6] Calculate difference from previous weight.
+        red_brush[6] = current_weight
+        R_Previous.set(red_brush[6])
+        # Since this is the first weigh sample set differance to 0.
+        R_diff.set(0.00)
+
+        # [7] Current weight
+        red_brush[7] = red_brush[3]
+        R_est_length.set(red_brush[7])
+
+    else:
+        # Update the previous widget.
+        R_Previous.set(red_brush[7])
+
+        # [6] Update the difference list and text widget.
+        red_brush[6] = "{:.4f}".format((red_brush[7]) - current_weight)
+        R_diff.set(red_brush[6])
+
+        # [5]  Update current weight widget.
+        red_brush[5] = current_weight
+        R_Current.set(red_brush[5])
+
+        # [7] Update the current length widget.
+        red_brush[7] = "{:.4f}".format(find_height(current_weight,
+                                                   red_brush[2],
+                                                   red_brush[1]))
+
+        R_est_length.set(red_brush[7])
+
+    # Have all colors been recorded
+    if green_recorded and red_recorded and blue_recorded:
+        record_complete()
 
 
 RedButton = tk.Button(window, text='Record', command=Red_clicked,
@@ -270,9 +348,10 @@ def Green_clicked():
     global green_brush
     global green_recorded
 
+    # Used for enter the record_complete() function.
     green_recorded = True
 
-    # Change button to be sunken
+    # Change button to be sunken.
     GreenButton.config(text='Recorded', relief='sunken')
 
     # Get the current weight from the scale
@@ -312,6 +391,7 @@ def Green_clicked():
         # [6] Diff from Previous weight
         green_brush[6] = current_weight
         G_Previous.set(green_brush[6])
+        # Since this is the first weigh sample set differance to 0.
         G_diff.set(0.00)
 
         # [7] Current Length
@@ -320,7 +400,7 @@ def Green_clicked():
 
     else:
         # TODO remove this line - testing green_brush[7] is set in first_time
-        green_brush[7] = 30.0
+        # green_brush[7] = 30.0
 
         # update the previous entry widget
         G_Previous.set(green_brush[7])
@@ -334,14 +414,14 @@ def Green_clicked():
         G_Current.set(green_brush[5])
 
         # [7] update Current length
-        green_brush[7] = "{:.4f}".format(find_height(current_weight))
+
+        green_brush[7] = "{:.4f}".format(find_height(current_weight,
+                                                     green_brush[2],
+                                                     green_brush[1]))
+
         G_est_length.set(green_brush[7])
 
     # Have all colors been recorded, if so complete record
-
-    # print(green_recorded)  # TODO remove this after testing
-    # print(blue_recorded)  # TODO remove this after testing
-    # print(red_recorded)  # TODO remove this after testing
 
     if green_recorded and blue_recorded and red_recorded:
         record_complete()
