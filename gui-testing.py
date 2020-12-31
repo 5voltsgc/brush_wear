@@ -3,6 +3,16 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import datetime
+import serial
+import time
+
+# Open Serial Port
+serialPort = serial.Serial(port="COM30",
+                           baudrate=9600,
+                           bytesize=8,
+                           timeout=2,
+                           stopbits=serial.STOPBITS_ONE)
+time.sleep(0.1)     # wait for pyserial port to actually be ready
 
 # Global Varibles
 Number_samples = 3
@@ -96,8 +106,70 @@ def find_fiber_count(scale, fiber_radius=0.127, fiber_height=76.2,
     return(count)
 
 
+def Weight_read():
+
+    serialString = ""  # Used to hold data coming over UART
+    actual_weight = 0.00
+    serialPort.flushInput()
+
+    try:
+        serialString = serialPort.readline()
+        serialString = serialString.decode('Ascii').strip('+').strip()
+        serialString = serialString[:-1]
+        actual_weight = (float(serialString))
+
+    except serial.SerialException:
+        # There is no new data from serial port
+        return(0)
+
+    except ValueError:
+        # just return 0 Zero if cant be converted to float, and try again
+        return(0)
+
+    except TypeError:
+        # Disconnect of USB->UART occured
+        # self.port.close()
+        return(0)
+    else:
+        return(actual_weight)
+
+
 def sample_weight():
-    return(31.3)
+    average_weight = []
+    current_weight = 0.00
+
+    for x in range(Number_samples):
+        read = Weight_read()
+        average_weight.append(read)
+
+    current_weight = Weight_read()
+    max_weight = max(average_weight)
+    min_weight = min(average_weight)
+
+    loop_count = 0
+    try:
+        while max_weight != min_weight or min_weight == 0:
+            # reomve 1st entry
+            average_weight.pop(0)
+            # read scale
+            current_weight = Weight_read()
+
+            # add the current weight to end of list
+            average_weight.append(current_weight)
+            # find max and min desire them to be same
+            max_weight = max(average_weight)
+            min_weight = min(average_weight)
+            loop_count += 1
+
+            if loop_count > 25:
+                print("this represents message box in Tkinter - check scale!")
+                loop_count = 0
+
+        return(current_weight)
+
+    except TypeError:
+        print('Check Scale - TypeError')
+        pass
 
 
 def find_height(scale, fiber_radius=0.127, Num_fibers=974, collar=2.213479):
@@ -308,14 +380,11 @@ def Blue_clicked():
         B_est_length.set(blue_brush[7])
 
     else:
-        # TODO remove this line - testing green_brush[7] is set in first_time
-        blue_brush[7] = 30.0
-
         # Update the previous widget.
         B_Previous.set(blue_brush[5])
 
         # [6] Update the difference list and text widget.
-        blue_brush[6] = "{:.4f}".format((blue_brush[7]) - current_weight)
+        blue_brush[6] = "{:.4f}".format((blue_brush[6]) - current_weight)
         B_diff.set(blue_brush[6])
 
         # [5]  Update current weight widget.
@@ -406,7 +475,7 @@ def Red_clicked():
         R_Previous.set(red_brush[5])
 
         # [6] Update the difference list and text widget.
-        red_brush[6] = "{:.4f}".format((red_brush[7]) - current_weight)
+        red_brush[6] = "{:.4f}".format((red_brush[6]) - current_weight)
         R_diff.set(red_brush[6])
 
         # [5]  Update current weight widget.
@@ -502,7 +571,7 @@ def Green_clicked():
         G_Previous.set(green_brush[5])
 
         # [6] update the difference list and text widget
-        green_brush[6] = "{:.4f}".format((green_brush[7]) - current_weight)
+        green_brush[6] = "{:.4f}".format((green_brush[6]) - current_weight)
         G_diff.set(green_brush[6])
 
         # [5] Current weight
@@ -534,7 +603,13 @@ Blue_Start_lbl = ttk.Label(window,
 Blue_Start_lbl.grid(column=1, row=44,)
 
 B_start = tk.StringVar()
-Blue_start = ttk.Entry(window, width=15, textvariable=B_start)
+Blue_start = ttk.Entry(window,
+                       width=15,
+                       textvariable=B_start,
+                       state='readonly',
+                       font=("Helvetica", 12),
+                       justify='center'
+                       )
 Blue_start.grid(column=2, row=44)
 
 Blue_Previous_lbl = ttk.Label(window,
@@ -543,7 +618,13 @@ Blue_Previous_lbl = ttk.Label(window,
 Blue_Previous_lbl.grid(column=1, row=45,)
 
 B_Previous = tk.StringVar()
-Blue_Previous = ttk.Entry(window, width=15, textvariable=B_Previous)
+Blue_Previous = ttk.Entry(window,
+                          width=15,
+                          textvariable=B_Previous,
+                          state='readonly',
+                          font=("Helvetica", 12),
+                          justify='center'
+                          )
 Blue_Previous.grid(column=2, row=45)
 
 Blue_Current_lbl = ttk.Label(window,
@@ -552,7 +633,13 @@ Blue_Current_lbl = ttk.Label(window,
 Blue_Current_lbl.grid(column=1, row=46,)
 
 B_Current = tk.StringVar()
-Blue_Current = ttk.Entry(window, width=15, textvariable=B_Current)
+Blue_Current = ttk.Entry(window,
+                         width=15,
+                         textvariable=B_Current,
+                         state='readonly',
+                         font=("Helvetica", 12),
+                         justify='center'
+                         )
 Blue_Current.grid(column=2, row=46)
 
 Blue_Diff_lbl = ttk.Label(window,
@@ -561,7 +648,13 @@ Blue_Diff_lbl = ttk.Label(window,
 Blue_Diff_lbl.grid(column=1, row=47,)
 
 B_diff = tk.StringVar()
-Blue_diff = ttk.Entry(window, width=15, textvariable=B_diff)
+Blue_diff = ttk.Entry(window,
+                      width=15,
+                      textvariable=B_diff,
+                      state='readonly',
+                      font=("Helvetica", 12),
+                      justify='center'
+                      )
 Blue_diff.grid(column=2, row=47)
 
 Blue_est_length_lbl = ttk.Label(window,
@@ -570,7 +663,13 @@ Blue_est_length_lbl = ttk.Label(window,
 Blue_est_length_lbl.grid(column=1, row=48,)
 
 B_est_length = tk.StringVar()
-Blue_est_length = ttk.Entry(window, width=15, textvariable=B_est_length)
+Blue_est_length = ttk.Entry(window,
+                            width=15,
+                            textvariable=B_est_length,
+                            state='readonly',
+                            font=("Helvetica", 12),
+                            justify='center'
+                            )
 Blue_est_length.grid(column=2, row=48)
 
 # Red labels and Text Boxes
@@ -580,7 +679,13 @@ Red_Start_lbl = ttk.Label(window,
 Red_Start_lbl.grid(column=6, row=44,)
 
 R_start = tk.StringVar()
-Red_start = ttk.Entry(window, width=15, textvariable=R_start)
+Red_start = ttk.Entry(window,
+                      width=15,
+                      textvariable=R_start,
+                      state='readonly',
+                      font=("Helvetica", 12),
+                      justify='center'
+                      )
 Red_start.grid(column=7, row=44)
 
 Red_Previous_lbl = ttk.Label(window,
@@ -589,7 +694,13 @@ Red_Previous_lbl = ttk.Label(window,
 Red_Previous_lbl.grid(column=6, row=45,)
 
 R_Previous = tk.StringVar()
-Red_Previous = ttk.Entry(window, width=15, textvariable=R_Previous)
+Red_Previous = ttk.Entry(window,
+                         width=15,
+                         textvariable=R_Previous,
+                         state='readonly',
+                         font=("Helvetica", 12),
+                         justify='center'
+                         )
 Red_Previous.grid(column=7, row=45)
 
 Red_Current_lbl = ttk.Label(window,
@@ -598,7 +709,14 @@ Red_Current_lbl = ttk.Label(window,
 Red_Current_lbl.grid(column=6, row=46,)
 
 R_Current = tk.StringVar()
-Red_Current = ttk.Entry(window, width=15, textvariable=R_Current)
+Red_Current = ttk.Entry(window,
+                        width=15,
+                        textvariable=R_Current,
+                        state='readonly',
+                        font=("Helvetica", 12),
+                        justify='center'
+                        )
+
 Red_Current.grid(column=7, row=46)
 
 Red_Diff_lbl = ttk.Label(window,
@@ -607,16 +725,31 @@ Red_Diff_lbl = ttk.Label(window,
 Red_Diff_lbl.grid(column=6, row=47,)
 
 R_diff = tk.StringVar()
-Red_diff = ttk.Entry(window, width=15, textvariable=R_diff)
+Red_diff = ttk.Entry(window,
+                     width=15,
+                     textvariable=R_diff,
+                     state='readonly',
+                     font=("Helvetica", 12),
+                     justify='center'
+                     )
 Red_diff.grid(column=7, row=47)
 
 Red_est_length_lbl = ttk.Label(window,
                                text="Est. Length (mm)",
-                               font=("Helvetica", 12))
+                               font=("Helvetica", 12),
+                               state='readonly',
+                               justify='center'
+                               )
 Red_est_length_lbl.grid(column=6, row=48,)
 
 R_est_length = tk.StringVar()
-Red_est_length = ttk.Entry(window, width=15, textvariable=R_est_length)
+Red_est_length = ttk.Entry(window,
+                           width=15,
+                           textvariable=R_est_length,
+                           state='readonly',
+                           font=("Helvetica", 12),
+                           justify='center'
+                           )
 Red_est_length.grid(column=7, row=48)
 
 # Green labels and Text Boxes
