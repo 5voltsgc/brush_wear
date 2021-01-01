@@ -217,6 +217,13 @@ def record_complete():
     global red_first_time
     global green_first_time
 
+    # update the odometer
+    total_odo = float(odo.get())
+    dist_add = float(dist.get())
+    total_odo = total_odo + dist_add
+    odo.set("{:.4f}".format(total_odo))
+
+    # Update the first time setup boolean
     blue_first_time = False
     red_first_time = False
     green_first_time = False
@@ -225,9 +232,15 @@ def record_complete():
     RedButton.config(text='Record', relief='raised')
     GreenButton.config(text='Record', relief='raised')
 
+    # update record number
+    record_num.set(loop_count)
+
+    # compile brush data for CSV file
     green = ', '.join([str(elem) for elem in blue_brush])
     red = ', '.join([str(elem) for elem in red_brush])
     blue = ', '.join([str(elem) for elem in green_brush])
+    notes_taken = notes.get()
+    notes.set("")
 
     # Print to the terminal the current weight for each brush.
     screen_print = (str(blue_brush[5])
@@ -245,7 +258,9 @@ def record_complete():
                    + ", "
                    + red
                    + ", "
-                   + blue)
+                   + blue
+                   + ", "
+                   + notes_taken)
 
     with open(filename, 'a') as f:
         loop_count += 1
@@ -384,7 +399,8 @@ def Blue_clicked():
         B_Previous.set(blue_brush[5])
 
         # [6] Update the difference list and text widget.
-        blue_brush[6] = "{:.4f}".format((blue_brush[6]) - current_weight)
+        sub = float(blue_brush[5]) - current_weight
+        blue_brush[6] = "{:.1f}".format(sub)
         B_diff.set(blue_brush[6])
 
         # [5]  Update current weight widget.
@@ -475,7 +491,8 @@ def Red_clicked():
         R_Previous.set(red_brush[5])
 
         # [6] Update the difference list and text widget.
-        red_brush[6] = "{:.4f}".format((red_brush[6]) - current_weight)
+        sub = float(red_brush[5]) - current_weight
+        red_brush[6] = "{:.4f}".format(sub)
         R_diff.set(red_brush[6])
 
         # [5]  Update current weight widget.
@@ -523,7 +540,8 @@ def Green_clicked():
     # Get the current weight from the scale
     current_weight = sample_weight()
 
-    # Find out if this is the first record
+    # Find out if this is the first record, this code only executes
+    # the first time, then all the rest is the else statment
     if green_first_time:
 
         # Read the selected brush then make it grayed out
@@ -556,6 +574,7 @@ def Green_clicked():
         # [6] Diff from Previous weight
         green_brush[6] = current_weight
         G_Previous.set(green_brush[6])
+
         # Since this is the first weigh sample set differance to 0.
         G_diff.set(0.00)
 
@@ -564,14 +583,15 @@ def Green_clicked():
         G_est_length.set(green_brush[7])
 
     else:
-        # TODO remove this line - testing green_brush[7] is set in first_time
-        green_brush[7] = 30.0
+        # # TODO remove this line - testing green_brush[7] is set in first_time
+        # green_brush[7] = 30.0
 
         # update the previous entry widget
         G_Previous.set(green_brush[5])
 
         # [6] update the difference list and text widget
-        green_brush[6] = "{:.4f}".format((green_brush[6]) - current_weight)
+        sub = float(green_brush[5]) - current_weight
+        green_brush[6] = "{:.4f}".format(sub)
         G_diff.set(green_brush[6])
 
         # [5] Current weight
@@ -834,8 +854,13 @@ record_lbl = ttk.Label(window,
 record_lbl.place(relx=.1, rely=.70,)
 
 record_num = tk.StringVar()
-record_num = ttk.Entry(window, width=15, textvariable=record_num)
-record_num.place(relx=.17, rely=.70,)
+record_num_entry = ttk.Entry(window, width=5,
+                             textvariable=record_num,
+                             state='readonly',
+                             font=('Helvetica', 12),
+                             justify='center'
+                             )
+record_num_entry.place(relx=.17, rely=.70,)
 
 # The distance entry
 distance_lbl = ttk.Label(window,
@@ -843,8 +868,13 @@ distance_lbl = ttk.Label(window,
                          font=("Helvetica", 12))
 distance_lbl.place(relx=.28, rely=.70,)
 
-distance = tk.StringVar()
-distance = ttk.Entry(window, width=15, textvariable=distance)
+dist = tk.DoubleVar(value=1.0)
+distance = ttk.Spinbox(window,
+                       textvariable=dist,
+                       width=15,
+                       from_=.1,
+                       to=10,
+                       increment=.1)
 distance.place(relx=.395, rely=.70,)
 
 # The odometer entry
@@ -853,8 +883,12 @@ odometer_lbl = ttk.Label(window,
                          font=("Helvetica", 12))
 odometer_lbl.place(relx=.51, rely=.70,)
 
-odometer = tk.StringVar()
-odometer = ttk.Entry(window, width=15, textvariable=odometer)
+odo = tk.DoubleVar(0.00)
+odometer = ttk.Entry(window,
+                     width=15,
+                     textvariable=odo,
+                     state='readonly',
+                     justify='center')
 odometer.place(relx=.58, rely=.70,)
 
 # The notes
@@ -864,9 +898,18 @@ notes_lbl = ttk.Label(window,
 notes_lbl.place(relx=.1, rely=.80,)
 
 notes = tk.StringVar()
-notes = ttk.Entry(window, width=90, textvariable=notes)
-notes.place(relx=.17, rely=.80,)
+notes_entry = ttk.Entry(window,
+                        width=90,
+                        textvariable=notes,
+                        )
+notes_entry.place(relx=.17, rely=.80,)
 
+given_filename = "filename: " + filename
+filename_lbl = ttk.Label(window,
+                         text=given_filename,
+                         font=("Helvetica", 8)
+                         )
+filename_lbl.place(relx=.1, rely=.9)
 
 def testing_complete():
     # ask are you sure
