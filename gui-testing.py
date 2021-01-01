@@ -207,7 +207,7 @@ def record_complete():
     global green_recorded
     global blue_recorded
     global red_recorded
-    global loop_count  # TODO Loop_count needs to be distance and add odometer
+    global loop_count
 
     red_recorded = False
     blue_recorded = False
@@ -250,6 +250,36 @@ def record_complete():
                     + str(green_brush[5]))
     print(screen_print)
 
+    # create header row for CSV
+    header = ('date-time, '
+              + 'Record Number, '
+              + 'green item, '
+              + 'green fiber count, '
+              + 'green fiber radius, '
+              + 'green start length, '
+              + 'green start weight, '
+              + 'green current weight, '
+              + 'green diff from previous weight, '
+              + 'green est. current length, '
+              + 'red item, '
+              + 'red fiber count, '
+              + 'red fiber radius, '
+              + 'red start length, '
+              + 'red start weight, '
+              + 'red current weight, '
+              + 'red diff from previous weight, '
+              + 'red est. current length, '
+              + 'blue item, '
+              + 'blue fiber count, '
+              + 'blue fiber radius, '
+              + 'blue start length, '
+              + 'blue start weight, '
+              + 'blue current weight, '
+              + 'blue diff from previous weight, '
+              + 'blue est. current length, '
+              + 'Notes'
+              )
+
     record_data = (str(datetime.datetime.now())
                    + ", "
                    + str(loop_count)
@@ -263,6 +293,10 @@ def record_complete():
                    + notes_taken)
 
     with open(filename, 'a') as f:
+
+        if loop_count == 1:
+            f.write(header)
+            f.write('\n')
         loop_count += 1
         f.write(record_data)
         f.write('\n')
@@ -910,6 +944,7 @@ filename_lbl = ttk.Label(window,
                          font=("Helvetica", 8)
                          )
 filename_lbl.place(relx=.1, rely=.9)
+
 
 def testing_complete():
     # ask are you sure
